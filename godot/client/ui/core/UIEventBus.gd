@@ -24,6 +24,7 @@ class AdminEvents extends RefCounted:
 	signal status_received(players: Array)
 	signal announcement_received(message: String)
 	signal error_received(message: String)
+	signal success_received(message: String)
 
 class InventoryEvents extends RefCounted:
 	signal inventory_updated()
