@@ -81,9 +81,8 @@ pub async fn start_quinn_client(
             .with_custom_certificate_verifier(Arc::new(LocalhostDevVerifier))
             .with_no_client_auth()
     } else {
-        let root_store = rustls::RootCertStore::from_iter(
-            webpki_roots::TLS_SERVER_ROOTS.iter().cloned(),
-        );
+        let root_store =
+            rustls::RootCertStore::from_iter(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
         rustls::ClientConfig::builder()
             .with_root_certificates(root_store)
             .with_no_client_auth()
@@ -191,22 +190,32 @@ pub async fn start_quinn_client(
                         match connection.open_uni().await {
                             Ok(mut stream) => {
                                 if let Err(error) = stream.write_all(&buffer).await {
-                                    tracing::error!("Failed to write authentication stream: {}", error);
-                                    let _ = tx_life.send_async(LifecycleEvent::ClientDisconnected(
-                                        "Could not send authentication request.".to_string()
-                                    )).await;
+                                    tracing::error!(
+                                        "Failed to write authentication stream: {}",
+                                        error
+                                    );
+                                    let _ = tx_life
+                                        .send_async(LifecycleEvent::ClientDisconnected(
+                                            "Could not send authentication request.".to_string(),
+                                        ))
+                                        .await;
                                     break;
                                 }
                                 if let Err(error) = stream.finish() {
-                                    tracing::error!("Failed to finish authentication stream: {}", error);
+                                    tracing::error!(
+                                        "Failed to finish authentication stream: {}",
+                                        error
+                                    );
                                     break;
                                 }
                             }
                             Err(error) => {
                                 tracing::error!("Could not open authentication stream: {}", error);
-                                let _ = tx_life.send_async(LifecycleEvent::ClientDisconnected(
-                                    "Could not open authentication channel.".to_string()
-                                )).await;
+                                let _ = tx_life
+                                    .send_async(LifecycleEvent::ClientDisconnected(
+                                        "Could not open authentication channel.".to_string(),
+                                    ))
+                                    .await;
                                 break;
                             }
                         }
