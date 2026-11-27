@@ -18,6 +18,10 @@ func _ready() -> void:
 
 func sign_in(user_email: String, password: String) -> Dictionary:
 	id_token = ""
+	refresh_token = ""
+	email = ""
+	uid = ""
+	token_expires_at = 0
 	is_admin = false
 	if _busy:
 		return {"ok": false, "message": "An authentication request is already running."}
