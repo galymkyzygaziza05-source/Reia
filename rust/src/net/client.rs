@@ -6,6 +6,7 @@ use quinn::{ClientConfig, Endpoint, TransportConfig};
 use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::Duration;
+use tokio::io::AsyncWriteExt;
 
 /// A dummy verifier to accept our self-signed rcgen certificates during development.
 #[derive(Debug)]
@@ -165,7 +166,32 @@ pub async fn start_quinn_client(
                     buffer.extend_from_slice(&outgoing.op_code.to_le_bytes());
                     buffer.extend_from_slice(&outgoing.payload);
 
-                    if connection.send_datagram(buffer.into()).is_err() {
+                    if outgoing.op_code == OpCode::AuthRequest as u16 {
+                        // Firebase ID tokens are sent on a reliable QUIC stream,
+                        // never in lossy movement datagrams.
+                        match connection.open_uni().await {
+                            Ok(mut stream) => {
+                                if let Err(error) = stream.write_all(&buffer).await {
+                                    tracing::error!("Failed to write authentication stream: {}", error);
+                                    let _ = tx_life.send_async(LifecycleEvent::ClientDisconnected(
+                                        "Could not send authentication request.".to_string()
+                                    )).await;
+                                    break;
+                                }
+                                if let Err(error) = stream.finish() {
+                                    tracing::error!("Failed to finish authentication stream: {}", error);
+                                    break;
+                                }
+                            }
+                            Err(error) => {
+                                tracing::error!("Could not open authentication stream: {}", error);
+                                let _ = tx_life.send_async(LifecycleEvent::ClientDisconnected(
+                                    "Could not open authentication channel.".to_string()
+                                )).await;
+                                break;
+                            }
+                        }
+                    } else if connection.send_datagram(buffer.into()).is_err() {
                         tracing::error!("Failed to send datagram to server. Connection lost.");
                         let _ = tx_life
                             .send_async(LifecycleEvent::ClientDisconnected(
