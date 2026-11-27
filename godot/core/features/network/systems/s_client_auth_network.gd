@@ -22,6 +22,7 @@ func _process_auth_success(bucket: Dictionary) -> void:
 		var my_net_id := reader.get_64()
 		var zone_id := reader.get_u32()
 		var is_admin := reader.get_u8() == 1
+		FirebaseAuth.is_admin = is_admin
 
 		# Store who WE are so the Spawner System knows which mesh gets the camera
 		GameOrchestrator.local_client_net_id = my_net_id
