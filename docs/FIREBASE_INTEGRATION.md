@@ -57,18 +57,19 @@ The following authentication foundation is now present in the working branch:
 4. On the trusted game server, set:
    - `FIREBASE_PROJECT_ID=gen-lang-client-0722704032`
    - `FIREBASE_WEB_API_KEY=<the same Firebase Web API key>`
-5. Never put a Firebase service-account JSON file or Admin SDK private key in the client or Git repository.
+5. Set `REIA_TLS_CERT_PATH` and `REIA_TLS_KEY_PATH` on the game server to the full-chain PEM certificate and matching private key. Set Godot `reia/server_tls_name` to the certificate DNS name; the socket IP can remain a separate value.
+6. Never put a Firebase service-account JSON file or Admin SDK private key in the client or Git repository.
 
 ## Important production security blocker
 
-The existing QUIC client currently uses a development certificate verifier that accepts any server certificate. The Firebase token is encrypted in transit, but without server certificate validation a man-in-the-middle could impersonate the game server and capture a token. **Do not deploy this authentication flow for public users or treat it as production-secure until the QUIC server certificate is validated or pinned.** The current server also generates a self-signed localhost certificate for development.
+The QUIC client now validates server certificates against trusted public roots and checks a configurable DNS name. The server loads its certificate chain and private key from `REIA_TLS_CERT_PATH` and `REIA_TLS_KEY_PATH`. Its generated self-signed `localhost` certificate is only a development fallback and will not be trusted by the normal client. **Before public use, configure a valid certificate chain for the server domain and set Godot `reia/server_tls_name` to that exact domain.**
 
 ## Still not implemented
 
 - A complete in-game administrator dashboard and its server-side moderation/management commands.
 - Persistent player profiles, account linking, password reset UI, and token refresh/session renewal.
 - Firestore schema and Security Rules.
-- Production QUIC certificate provisioning and validation.
+- Provisioning and configuring a valid production QUIC certificate for the actual server domain.
 - End-to-end Godot export/runtime verification. Rust CI and Godot parsing/build checks must pass before this branch is considered complete.
 
 ## Current implementation status
