@@ -51,7 +51,7 @@ var session := SessionEvents.new()
 ## Access via UIEventBus.auth.request_login.emit()
 var auth := AuthEvents.new()
 
-## Access via UIEventBus.inventory.inventory_updated.emit()
+## Access via UIEventBus.admin.status_received.emit()
 var admin := AdminEvents.new()
 
 var inventory := InventoryEvents.new()
