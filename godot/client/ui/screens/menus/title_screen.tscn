@@ -110,14 +110,13 @@ layout_mode = 2
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"BaseLineEdit"
-placeholder_text = "username"
+placeholder_text = "email address"
 
 [node name="InputPassword" type="LineEdit" parent="ScreenContainer/FlowStates/PlayMenu" unique_id=1737429817]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"BaseLineEdit"
-placeholder_text = "password not needed"
-editable = false
+placeholder_text = "password"
 secret = true
 
 [node name="BtnPlayOnline" type="Button" parent="ScreenContainer/FlowStates/PlayMenu" unique_id=1725928505]
@@ -125,6 +124,12 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"PrimaryActionButton"
 text = "Play Online"
+
+[node name="BtnRegister" type="Button" parent="ScreenContainer/FlowStates/PlayMenu"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"PrimaryActionButton"
+text = "Create Account"
 
 [node name="HSeparator2" type="HSeparator" parent="ScreenContainer/FlowStates/PlayMenu" unique_id=1924108432]
 layout_mode = 2
