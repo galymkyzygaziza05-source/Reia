@@ -35,6 +35,9 @@ pub async fn handle_client(
 
                         let op_code_raw = u16::from_le_bytes([bytes[0], bytes[1]]);
                         match OpCode::try_from(op_code_raw) {
+                            Ok(OpCode::AdminKick) => {
+                                tracing::warn!("Client {} attempted to send a server-only admin kick opcode", client_id);
+                            }
                             Ok(OpCode::AuthRequest) => {
                                 // Authentication is accepted only on reliable QUIC streams.
                                 tracing::warn!("Client {} attempted to authenticate over an unreliable datagram", client_id);
