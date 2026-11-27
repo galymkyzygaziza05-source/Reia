@@ -47,6 +47,10 @@ GameOrchestrator="*uid://wfffbfiau32v"
 NetworkRouter="*uid://bcct6em86mvjj"
 SceneManager="*uid://cc6iusoi34bpu"
 UserPreferences="*uid://3krmnajq1oo5"
+FirebaseAuth="*res://client/core/FirebaseAuth.gd"
+
+[reia]
+firebase_web_api_key=""
 
 [debug]
 
