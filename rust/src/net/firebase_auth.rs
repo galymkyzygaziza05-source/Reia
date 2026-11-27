@@ -17,6 +17,7 @@ pub struct VerifiedFirebaseUser {
 /// server environment so this verifier is bound to the intended Firebase project.
 pub async fn verify_auth_payload(
     payload: &[u8],
+    configured_api_key: &str,
 ) -> Result<(VerifiedFirebaseUser, Vec<u8>), String> {
     if payload.len() > 12 * 1024 {
         return Err("Authentication payload is too large".to_string());
@@ -52,12 +53,16 @@ pub async fn verify_auth_payload(
     };
 
     let project_id = std::env::var("FIREBASE_PROJECT_ID")
-        .map_err(|_| "Server Firebase project is not configured".to_string())?;
+        .unwrap_or_else(|_| EXPECTED_PROJECT_ID.to_string());
     if project_id != EXPECTED_PROJECT_ID {
         return Err("Server Firebase project does not match this Reia build".to_string());
     }
-    let api_key = std::env::var("FIREBASE_WEB_API_KEY")
-        .map_err(|_| "Server Firebase API key is not configured".to_string())?;
+    let api_key = if configured_api_key.trim().is_empty() {
+        std::env::var("FIREBASE_WEB_API_KEY")
+            .map_err(|_| "Server Firebase API key is not configured".to_string())?
+    } else {
+        configured_api_key.to_string()
+    };
 
     let client = Client::builder()
         .timeout(Duration::from_secs(10))
