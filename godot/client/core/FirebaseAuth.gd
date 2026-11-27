@@ -65,6 +65,7 @@ func sign_in(user_email: String, password: String) -> Dictionary:
 	return {"ok": true, "message": "Signed in successfully."}
 
 func register(user_email: String, password: String) -> Dictionary:
+	is_admin = false
 	if _busy:
 		return {"ok": false, "message": "An authentication request is already running."}
 	var normalized_email := user_email.strip_edges().to_lower()
@@ -138,7 +139,8 @@ func ensure_valid_token() -> bool:
 	var response: Array = await _http.request_completed
 	_busy = false
 	var response_code: int = response[1]
-	var parsed: Variant = JSON.parse_string((response[3] as PackedByteArray).get_string_from_utf8())
+	var response_body: PackedByteArray = response[3]
+	var parsed: Variant = JSON.parse_string(response_body.get_string_from_utf8())
 	if response_code < 200 or response_code >= 300 or not parsed is Dictionary:
 		sign_out()
 		return false
