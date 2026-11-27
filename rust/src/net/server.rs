@@ -8,10 +8,10 @@ use flume::{Receiver, Sender};
 use quinn::crypto::rustls::QuicServerConfig;
 use quinn::{Connection, Endpoint, ServerConfig, TransportConfig};
 use std::net::SocketAddr;
-use std::{fs::File, io::BufReader};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicI64, Ordering};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::{fs::File, io::BufReader};
 
 pub async fn start_quinn_server(
     port: u16,
@@ -32,29 +32,38 @@ pub async fn start_quinn_server(
     ) {
         (Ok(cert_path), Ok(key_path)) => {
             let mut cert_reader = BufReader::new(
-                File::open(cert_path).map_err(|e| NetworkInitError::TlsConfigFailed(e.to_string()))?
+                File::open(cert_path)
+                    .map_err(|e| NetworkInitError::TlsConfigFailed(e.to_string()))?
             );
             let cert_chain = rustls_pemfile::certs(&mut cert_reader)
                 .collect::<Result<Vec<_>, _>>()
                 .map_err(|e| NetworkInitError::TlsConfigFailed(e.to_string()))?;
             let mut key_reader = BufReader::new(
-                File::open(key_path).map_err(|e| NetworkInitError::TlsConfigFailed(e.to_string()))?
+                File::open(key_path)
+                    .map_err(|e| NetworkInitError::TlsConfigFailed(e.to_string()))?
             );
             let private_key = rustls_pemfile::private_key(&mut key_reader)
                 .map_err(|e| NetworkInitError::TlsConfigFailed(e.to_string()))?
-                .ok_or_else(|| NetworkInitError::TlsConfigFailed("TLS private key file is empty".to_string()))?;
+                .ok_or_else(|| {
+                    NetworkInitError::TlsConfigFailed("TLS private key file is empty".to_string())
+                })?;
             if cert_chain.is_empty() {
-                return Err(NetworkInitError::TlsConfigFailed("TLS certificate chain is empty".to_string()));
+                return Err(NetworkInitError::TlsConfigFailed(
+                    "TLS certificate chain is empty".to_string(),
+                ));
             }
             (cert_chain, private_key)
         }
         _ => {
-            tracing::warn!("Using self-signed localhost TLS certificate. This is not suitable for public servers.");
+            tracing::warn!(
+                "Using self-signed localhost TLS certificate. This is not suitable for public servers."
+            );
             let cert = rcgen::generate_simple_self_signed(vec!["localhost".into()])
                 .map_err(|e| NetworkInitError::CertGenerationFailed(e.to_string()))?;
             let cert_der = rustls::pki_types::CertificateDer::from(cert.cert.der().to_vec());
-            let private_key = rustls::pki_types::PrivateKeyDer::try_from(cert.signing_key.serialize_der())
-                .map_err(|e| NetworkInitError::TlsConfigFailed(e.to_string()))?;
+            let private_key =
+                rustls::pki_types::PrivateKeyDer::try_from(cert.signing_key.serialize_der())
+                    .map_err(|e| NetworkInitError::TlsConfigFailed(e.to_string()))?;
             (vec![cert_der], private_key)
         }
     };
@@ -97,7 +106,8 @@ pub async fn start_quinn_server(
             // Find the correct client connection
             if let Some(conn) = connections_for_out.get(&packet.target_id) {
                 if packet.op_code == OpCode::AdminKick as u16 {
-                    conn.value().close(quinn::VarInt::from_u32(1), b"Disconnected by administrator");
+                    conn.value()
+                        .close(quinn::VarInt::from_u32(1), b"Disconnected by administrator");
                     continue;
                 }
                 let mut buffer = Vec::with_capacity(2 + packet.payload.len());
