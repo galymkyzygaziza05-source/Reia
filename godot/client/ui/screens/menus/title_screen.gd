@@ -1,15 +1,23 @@
 class_name TitleScreen extends Control
 
-enum State {MAIN_MENU, PLAY_MENU}
+enum State { MAIN_MENU, PLAY_MENU, INFO_MENU }
 var current_state: State = State.MAIN_MENU
 
 @onready var main_menu_container: Control = $ScreenContainer/FlowStates/MainMenu
 @onready var play_menu_container: Control = $ScreenContainer/FlowStates/PlayMenu
+@onready var info_menu_container: Control = $ScreenContainer/FlowStates/InfoMenu
 
 # Main Menu Buttons
 @onready var btn_main_play: Button = %BtnMainPlay
+@onready var btn_about: Button = %BtnAbout
+@onready var btn_developers: Button = %BtnDevelopers
 @onready var btn_settings: Button = %BtnSettings
 @onready var btn_quit: Button = %BtnQuit
+
+# Information page
+@onready var info_title: Label = %InfoTitle
+@onready var info_body: Label = %InfoBody
+@onready var btn_info_back: Button = %BtnInfoBack
 
 # Play Menu Elements
 @onready var btn_singleplayer: Button = %BtnSingleplayer
@@ -22,26 +30,40 @@ var current_state: State = State.MAIN_MENU
 
 func _ready() -> void:
 	_switch_to_state(State.MAIN_MENU, false)
-
-	# Load saved username
 	input_username.text = UserPreferences.get_username()
 
-	# Wire Main Menu
 	UIUtils.safe_connect(btn_main_play.pressed, _on_main_play_clicked, "TitleScreen btn_main_play")
+	UIUtils.safe_connect(btn_about.pressed, _on_about_clicked, "TitleScreen btn_about")
+	UIUtils.safe_connect(btn_developers.pressed, _on_developers_clicked, "TitleScreen btn_developers")
 	UIUtils.safe_connect(btn_settings.pressed, _on_settings_clicked, "TitleScreen btn_settings")
 	UIUtils.safe_connect(btn_quit.pressed, _on_quit_clicked, "TitleScreen btn_quit")
 
-	# Wire Play Menu
 	UIUtils.safe_connect(btn_singleplayer.pressed, _on_play_solo, "TitleScreen btn_singleplayer")
 	UIUtils.safe_connect(btn_play_online.pressed, _on_play_online, "TitleScreen btn_play_online")
 	UIUtils.safe_connect(btn_host_play.pressed, _on_host_play, "TitleScreen btn_host_play")
 	UIUtils.safe_connect(btn_host_only.pressed, _on_host_only, "TitleScreen btn_host_only")
 	UIUtils.safe_connect(btn_back.pressed, _on_back_clicked, "TitleScreen btn_back")
-
-# --- MAIN MENU LOGIC ---
+	UIUtils.safe_connect(btn_info_back.pressed, _on_back_clicked, "TitleScreen btn_info_back")
 
 func _on_main_play_clicked() -> void:
 	_switch_to_state(State.PLAY_MENU)
+
+func _on_about_clicked() -> void:
+	_show_info(
+		"ABOUT REIA",
+		"Reia is an open-source 3D action-adventure RPG set in a fantasy world of mysterious realms. Explore environments, follow the story, fight enemies, discover abilities and shape your own adventure.\n\nThe project is designed to support offline play and online multiplayer experiences. Some systems are still in development, so features and availability may change between builds.\n\nThis is the community adaptation build based on the original Reia project."
+	)
+
+func _on_developers_clicked() -> void:
+	_show_info(
+		"DEVELOPERS & CONTRIBUTORS",
+		"ORIGINAL PROJECT\nQuaint Studios — creators and maintainers of the open-source Reia project.\n\nCOMMUNITY ADAPTATION\nDarkhan — developer contributing to this adapted build, its presentation and future improvements.\n\nOriginal project: github.com/Quaint-Studios/Reia"
+	)
+
+func _show_info(title_text: String, body_text: String) -> void:
+	info_title.text = title_text
+	info_body.text = body_text
+	_switch_to_state(State.INFO_MENU)
 
 func _on_settings_clicked() -> void:
 	UIModalManager.show_notification("Coming Soon!", "The settings feature isn't implemented yet but it will be soon.")
@@ -54,8 +76,6 @@ func _execute_quit() -> void:
 
 func _on_back_clicked() -> void:
 	_switch_to_state(State.MAIN_MENU)
-
-# --- PLAY MENU LOGIC ---
 
 func _on_play_solo() -> void:
 	_save_username_and_route()
@@ -71,37 +91,45 @@ func _on_host_play() -> void:
 	UIEventBus.session.intent_host_and_play.emit(7777)
 
 func _on_host_only() -> void:
+	_save_username_and_route()
 	UIEventBus.session.intent_host_only.emit(7777)
 
 func _save_username_and_route() -> void:
 	var user := input_username.text.strip_edges()
-	if user.is_empty(): user = "Adventurer"
+	if user.is_empty():
+		user = "Adventurer"
 	UserPreferences.save_username(user)
-
-# --- VISUAL STATE ---
 
 func _switch_to_state(new_state: State, animate: bool = true) -> void:
 	current_state = new_state
-
-	var containers: Array[Control] = [main_menu_container, play_menu_container]
-	for c in containers:
-		if c.visible and animate:
-			_fade_out(c)
+	var containers: Array[Control] = [main_menu_container, play_menu_container, info_menu_container]
+	for container in containers:
+		if container.visible and animate:
+			_fade_out(container)
 		else:
-			c.hide()
+			container.hide()
 
-	var target: Control = main_menu_container if current_state == State.MAIN_MENU else play_menu_container
+	var target: Control
+	match current_state:
+		State.MAIN_MENU:
+			target = main_menu_container
+		State.PLAY_MENU:
+			target = play_menu_container
+		_:
+			target = info_menu_container
 
-	if animate: _fade_in(target)
-	else: target.show()
+	if animate:
+		_fade_in(target)
+	else:
+		target.show()
 
 func _fade_out(node: Control) -> void:
-	var t := create_tween()
-	var _tween_prop := t.tween_property(node, "modulate:a", 0.0, 0.2)
-	var _callback := t.tween_callback(node.hide)
+	var tween := create_tween()
+	tween.tween_property(node, "modulate:a", 0.0, 0.2)
+	tween.tween_callback(node.hide)
 
 func _fade_in(node: Control) -> void:
 	node.show()
 	node.modulate.a = 0.0
-	var t := create_tween()
-	var _tween_prop := t.tween_property(node, "modulate:a", 1.0, 0.2)
+	var tween := create_tween()
+	tween.tween_property(node, "modulate:a", 1.0, 0.2)
