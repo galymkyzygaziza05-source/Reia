@@ -20,6 +20,8 @@ func is_configured() -> bool:
 	return not String(ProjectSettings.get_setting("reia/firebase_web_api_key", "")).strip_edges().is_empty()
 
 func sign_in(user_email: String, password: String) -> Dictionary:
+	id_token = ""
+	is_admin = false
 	if _busy:
 		return {"ok": false, "message": "An authentication request is already running."}
 	var normalized_email := user_email.strip_edges().to_lower()
