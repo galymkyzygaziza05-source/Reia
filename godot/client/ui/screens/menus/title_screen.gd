@@ -24,6 +24,7 @@ var current_state: State = State.MAIN_MENU
 @onready var input_username: LineEdit = %InputUsername
 @onready var input_password: LineEdit = %InputPassword
 @onready var btn_play_online: Button = %BtnPlayOnline
+@onready var btn_register: Button = %BtnRegister
 @onready var btn_host_play: Button = %BtnHostPlay
 @onready var btn_host_only: Button = %BtnHostOnly
 @onready var btn_back: Button = %BtnBack
@@ -40,6 +41,7 @@ func _ready() -> void:
 
 	UIUtils.safe_connect(btn_singleplayer.pressed, _on_play_solo, "TitleScreen btn_singleplayer")
 	UIUtils.safe_connect(btn_play_online.pressed, _on_play_online, "TitleScreen btn_play_online")
+	UIUtils.safe_connect(btn_register.pressed, _on_register, "TitleScreen btn_register")
 	UIUtils.safe_connect(btn_host_play.pressed, _on_host_play, "TitleScreen btn_host_play")
 	UIUtils.safe_connect(btn_host_only.pressed, _on_host_only, "TitleScreen btn_host_only")
 	UIUtils.safe_connect(btn_back.pressed, _on_back_clicked, "TitleScreen btn_back")
@@ -82,11 +84,26 @@ func _on_play_solo() -> void:
 	UIEventBus.session.intent_play_solo.emit()
 
 func _on_play_online() -> void:
+	if not await _authenticate():
+		return
 	_save_username_and_route()
 	var target_ip := "127.0.0.1"
 	UIEventBus.session.intent_play_online.emit(target_ip, 7777)
 
+func _on_register() -> void:
+	var result: Dictionary = await FirebaseAuth.register(input_username.text, input_password.text)
+	UIModalManager.show_notification("Reia account", String(result.get("message", "Registration failed.")))
+
+func _authenticate() -> bool:
+	var result: Dictionary = await FirebaseAuth.sign_in(input_username.text, input_password.text)
+	if not bool(result.get("ok", false)):
+		UIModalManager.show_notification("Sign in required", String(result.get("message", "Authentication failed.")))
+		return false
+	return true
+
 func _on_host_play() -> void:
+	if not await _authenticate():
+		return
 	_save_username_and_route()
 	UIEventBus.session.intent_host_and_play.emit(7777)
 
