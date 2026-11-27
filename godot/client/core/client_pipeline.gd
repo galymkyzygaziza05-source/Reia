@@ -32,6 +32,10 @@ static func _register_network_receivers(world: World) -> void:
 	auth_net.group = SystemGroups.PRE_PROCESS
 	world.add_system(auth_net)
 
+	var admin_net := ClientAdminNetworkSystem.new()
+	admin_net.group = SystemGroups.PRE_PROCESS
+	world.add_system(admin_net)
+
 	var spawn_net := ClientEntitySpawnSystem.new()
 	spawn_net.group = SystemGroups.PRE_PROCESS
 	world.add_system(spawn_net)
