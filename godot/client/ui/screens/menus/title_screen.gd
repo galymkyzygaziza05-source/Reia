@@ -88,8 +88,9 @@ func _on_play_online() -> void:
 	if not auth_ok:
 		return
 	_save_username_and_route()
-	var target_ip := "127.0.0.1"
-	UIEventBus.session.intent_play_online.emit(target_ip, 7777)
+	var target_ip := String(ProjectSettings.get_setting("reia/server_address", "127.0.0.1"))
+	var target_port := int(ProjectSettings.get_setting("reia/server_port", 7777))
+	UIEventBus.session.intent_play_online.emit(target_ip, target_port)
 
 func _on_register() -> void:
 	var result: Dictionary = await FirebaseAuth.register(input_username.text, input_password.text)
