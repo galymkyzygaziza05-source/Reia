@@ -43,8 +43,12 @@ func _send_announcement() -> void:
 	admin_announcement.clear()
 
 func _kick_player() -> void:
-	var target_id := admin_kick_id.text.strip_edges().to_int()
-	if target_id < 0:
+	var raw_target_id := admin_kick_id.text.strip_edges()
+	if raw_target_id.is_empty() or not raw_target_id.is_valid_int():
+		UIModalManager.show_notification("ADMIN PANEL", "Enter a valid player ID.")
+		return
+	var target_id := raw_target_id.to_int()
+	if target_id <= 0:
 		UIModalManager.show_notification("ADMIN PANEL", "Enter the player ID shown in the online list.")
 		return
 	_send_admin_command({"action": "kick", "target_id": target_id})
