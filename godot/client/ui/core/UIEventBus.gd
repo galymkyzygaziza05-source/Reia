@@ -18,6 +18,7 @@ class AuthEvents extends RefCounted:
 	signal request_login(username: String, token: String)
 	signal login_success(zone_id: Zone.ID)
 	signal login_failed(reason: String)
+	signal admin_access_granted()
 
 class InventoryEvents extends RefCounted:
 	signal inventory_updated()
