@@ -58,13 +58,30 @@ func _on_network_disconnected(reason: String) -> void:
 	UIModalManager.show_notification("Connection Failed", reason)
 
 func _send_auth_request() -> void:
-	var writer := StreamPeerBuffer.new()
-	writer.put_string(UserPreferences.get_username())
-	writer.put_string("dummy_token")
+	var auth_payload: Dictionary
+	if is_offline:
+		# Offline sessions do not cross the network and do not receive admin privileges.
+		auth_payload = {
+			"username": UserPreferences.get_username(),
+			"uid": "offline-local",
+			"email": "",
+			"email_verified": false,
+			"is_admin": false
+		}
+	else:
+		var token := FirebaseAuth.id_token
+		if token.is_empty():
+			UIModalManager.show_notification("Sign in required", "Sign in with your verified Firebase account before joining online.")
+			SceneManager.transition_to_screen(Scenes.Menus.TITLE_SCREEN)
+			return
+		auth_payload = {
+			"username": UserPreferences.get_username(),
+			"idToken": token
+		}
 
-	# Target 0 sends it to the Server
-	NetworkRouter.client.queue_packet(0, OpCode.ID.AUTH_REQUEST, writer.data_array)
-	print("[CLIENT] Sent AuthRequest. Awaiting Server approval...")
+	# Reliable QUIC transport is selected by the Rust layer for AUTH_REQUEST.
+	NetworkRouter.client.queue_packet(0, OpCode.ID.AUTH_REQUEST, JSON.stringify(auth_payload).to_utf8_buffer())
+	print("[CLIENT] Sent authentication request. Awaiting server verification...")
 
 func _on_rust_packets(buckets: Dictionary) -> void:
 	NetworkRouter.client.incoming_buckets = buckets
