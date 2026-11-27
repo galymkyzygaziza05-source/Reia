@@ -73,4 +73,4 @@ The existing QUIC client currently uses a development certificate verifier that 
 
 ## Current implementation status
 
-This file records the selected project and security design. It does **not** claim that Firebase Authentication, Firestore, token verification, account registration, or the administrator panel are already implemented. The current placeholder authentication must be replaced before public multiplayer access is considered secure.
+Firebase email/password account creation, email verification, client sign-in, reliable token transport, server-side token lookup, pre-authentication gameplay gating, and server-derived administrator identity are implemented in this working branch. Firestore, the full administrator dashboard, persistent profiles, password reset, refresh-token renewal, and production QUIC certificate validation remain outstanding. The branch must pass CI and runtime testing before merge or release.
