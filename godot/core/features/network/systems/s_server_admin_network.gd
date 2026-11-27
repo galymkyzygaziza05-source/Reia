@@ -76,7 +76,7 @@ func _send_error(client_id: int, message: String) -> void:
 	NetworkRouter.server.queue_packet(client_id, OpCode.ID.ADMIN_RESPONSE, payload)
 
 func _kick_player(admin_id: int, target_id: int) -> void:
-	if target_id < 0 or target_id == admin_id:
+	if target_id <= 0 or target_id == admin_id:
 		_send_error(admin_id, "Choose a different valid player ID.")
 		return
 	var target := EntityMap.server.get_entity(target_id)
