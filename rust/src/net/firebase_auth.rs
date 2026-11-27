@@ -1,5 +1,5 @@
 use reqwest::Client;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::time::Duration;
 
 const EXPECTED_PROJECT_ID: &str = "gen-lang-client-0722704032";
@@ -52,8 +52,8 @@ pub async fn verify_auth_payload(
         username
     };
 
-    let project_id = std::env::var("FIREBASE_PROJECT_ID")
-        .unwrap_or_else(|_| EXPECTED_PROJECT_ID.to_string());
+    let project_id =
+        std::env::var("FIREBASE_PROJECT_ID").unwrap_or_else(|_| EXPECTED_PROJECT_ID.to_string());
     if project_id != EXPECTED_PROJECT_ID {
         return Err("Server Firebase project does not match this Reia build".to_string());
     }
