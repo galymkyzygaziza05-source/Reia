@@ -33,14 +33,14 @@ pub async fn start_quinn_server(
         (Ok(cert_path), Ok(key_path)) => {
             let mut cert_reader = BufReader::new(
                 File::open(cert_path)
-                    .map_err(|e| NetworkInitError::TlsConfigFailed(e.to_string()))?
+                    .map_err(|e| NetworkInitError::TlsConfigFailed(e.to_string()))?,
             );
             let cert_chain = rustls_pemfile::certs(&mut cert_reader)
                 .collect::<Result<Vec<_>, _>>()
                 .map_err(|e| NetworkInitError::TlsConfigFailed(e.to_string()))?;
             let mut key_reader = BufReader::new(
                 File::open(key_path)
-                    .map_err(|e| NetworkInitError::TlsConfigFailed(e.to_string()))?
+                    .map_err(|e| NetworkInitError::TlsConfigFailed(e.to_string()))?,
             );
             let private_key = rustls_pemfile::private_key(&mut key_reader)
                 .map_err(|e| NetworkInitError::TlsConfigFailed(e.to_string()))?
