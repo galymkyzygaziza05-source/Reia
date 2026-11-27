@@ -1,5 +1,6 @@
 use reqwest::Client;
 use serde_json::{json, Value};
+use std::time::Duration;
 
 const EXPECTED_PROJECT_ID: &str = "gen-lang-client-0722704032";
 
@@ -58,7 +59,11 @@ pub async fn verify_auth_payload(
     let api_key = std::env::var("FIREBASE_WEB_API_KEY")
         .map_err(|_| "Server Firebase API key is not configured".to_string())?;
 
-    let response = Client::new()
+    let client = Client::builder()
+        .timeout(Duration::from_secs(10))
+        .build()
+        .map_err(|_| "Could not initialize Firebase verification client".to_string())?;
+    let response = client
         .post("https://identitytoolkit.googleapis.com/v1/accounts:lookup")
         .query(&[("key", api_key.as_str())])
         .json(&json!({ "idToken": token }))
