@@ -31,7 +31,7 @@ var current_state: State = State.MAIN_MENU
 
 func _ready() -> void:
 	_switch_to_state(State.MAIN_MENU, false)
-	input_username.text = UserPreferences.get_username()
+	input_username.text = ""
 
 	UIUtils.safe_connect(btn_main_play.pressed, _on_main_play_clicked, "TitleScreen btn_main_play")
 	UIUtils.safe_connect(btn_about.pressed, _on_about_clicked, "TitleScreen btn_about")
@@ -115,6 +115,10 @@ func _on_host_only() -> void:
 
 func _save_username_and_route() -> void:
 	var user := input_username.text.strip_edges()
+	if not FirebaseAuth.email.is_empty():
+		user = FirebaseAuth.email.get_slice("@", 0)
+	elif user.contains("@"):
+		user = user.get_slice("@", 0)
 	if user.is_empty():
 		user = "Adventurer"
 	UserPreferences.save_username(user)
