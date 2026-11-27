@@ -84,7 +84,8 @@ func _on_play_solo() -> void:
 	UIEventBus.session.intent_play_solo.emit()
 
 func _on_play_online() -> void:
-	if not await _authenticate():
+	var auth_ok: bool = await _authenticate()
+	if not auth_ok:
 		return
 	_save_username_and_route()
 	var target_ip := "127.0.0.1"
@@ -102,7 +103,8 @@ func _authenticate() -> bool:
 	return true
 
 func _on_host_play() -> void:
-	if not await _authenticate():
+	var auth_ok: bool = await _authenticate()
+	if not auth_ok:
 		return
 	_save_username_and_route()
 	UIEventBus.session.intent_host_and_play.emit(7777)
