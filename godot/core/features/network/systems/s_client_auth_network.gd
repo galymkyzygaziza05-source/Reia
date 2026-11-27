@@ -8,6 +8,9 @@ func query() -> QueryBuilder:
 	return super.query()
 
 func process(_entities: Array[Entity], _components: Array, _delta: float) -> void:
+	var auth_failed_bucket := NetworkRouter.client.consume_bucket(OpCode.ID.AUTH_FAILED)
+	if not auth_failed_bucket.is_empty():
+		_process_auth_failed(auth_failed_bucket)
 	var auth_success_bucket := NetworkRouter.client.consume_bucket(OpCode.ID.AUTH_SUCCESS)
 	if not auth_success_bucket.is_empty():
 		_process_auth_success(auth_success_bucket)
@@ -32,3 +35,14 @@ func _process_auth_success(bucket: Dictionary) -> void:
 		if is_admin:
 			UIEventBus.auth.admin_access_granted.emit()
 		break # Only process Auth once per client
+
+func _process_auth_failed(bucket: Dictionary) -> void:
+	var data: PackedByteArray = bucket["data"]
+	var offsets: PackedInt32Array = bucket["offsets"]
+	if offsets.is_empty():
+		return
+	var start: int = offsets[0]
+	var reason := data.slice(start, data.size()).get_string_from_utf8()
+	FirebaseAuth.sign_out()
+	UIModalManager.show_notification("Authentication failed", reason)
+	SceneManager.transition_to_screen(Scenes.Menus.TITLE_SCREEN)
