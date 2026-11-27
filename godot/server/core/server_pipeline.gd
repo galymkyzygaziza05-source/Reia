@@ -25,6 +25,10 @@ static func _register_network_receivers(world: World) -> void:
 	auth_net.group = SystemGroups.PRE_PROCESS
 	world.add_system(auth_net)
 
+	var admin_net := ServerAdminNetworkSystem.new()
+	admin_net.group = SystemGroups.PRE_PROCESS
+	world.add_system(admin_net)
+
 	var mov_net := ServerMovementNetworkSystem.new()
 	mov_net.group = SystemGroups.PRE_PROCESS
 	world.add_system(mov_net)
