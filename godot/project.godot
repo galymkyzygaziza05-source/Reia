@@ -52,6 +52,8 @@ FirebaseAuth="*res://client/core/FirebaseAuth.gd"
 [reia]
 firebase_web_api_key="AIzaSyC12extJThE7gJKf68ZX6z5U3RKm4MHIAs"
 server_tls_name="localhost"
+server_address="127.0.0.1"
+server_port=7777
 
 [debug]
 
