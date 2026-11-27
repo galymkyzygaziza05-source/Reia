@@ -110,7 +110,7 @@ layout_mode = 2
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"BaseLineEdit"
-placeholder_text = "email address"
+placeholder_text = "email for online / name for solo"
 
 [node name="InputPassword" type="LineEdit" parent="ScreenContainer/FlowStates/PlayMenu" unique_id=1737429817]
 unique_name_in_owner = true
@@ -123,7 +123,7 @@ secret = true
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"PrimaryActionButton"
-text = "Play Online"
+text = "Sign In & Play Online"
 
 [node name="BtnRegister" type="Button" parent="ScreenContainer/FlowStates/PlayMenu"]
 unique_name_in_owner = true
