@@ -49,16 +49,17 @@ The following authentication foundation is now present in the working branch:
 - Godot creates a player only from the trusted identity payload. The first-join training dummy has been removed.
 - The server includes the administrator bit in the authentication-success response; the client opens the dashboard only after that server-approved claim.
 - The first admin dashboard supports online-player status and server-wide announcements. Rust drops administrator commands from every non-admin connection before they reach Godot.
+- The online game server address, UDP port and TLS DNS name are configurable through Godot Project Settings.
 
 ## Required configuration before running online
 
 1. Enable **Email/Password** in Firebase Authentication.
 2. Enable email verification in the account workflow and ensure Firebase email templates are configured.
-3. In Godot Project Settings, set `reia/firebase_web_api_key` to the Web API key from the selected Firebase project. This is a public Firebase client identifier, not a service-account credential.
+3. The selected Firebase Web API key is already populated in `godot/project.godot` under `reia/firebase_web_api_key`. This is a public Firebase client identifier, not a service-account credential.
 4. On the trusted game server, set:
    - `FIREBASE_PROJECT_ID=gen-lang-client-0722704032`
    - `FIREBASE_WEB_API_KEY=<the same Firebase Web API key>`
-5. Set `REIA_TLS_CERT_PATH` and `REIA_TLS_KEY_PATH` on the game server to the full-chain PEM certificate and matching private key. Set Godot `reia/server_tls_name` to the certificate DNS name; the socket IP can remain a separate value.
+5. Set `REIA_TLS_CERT_PATH` and `REIA_TLS_KEY_PATH` on the game server to the full-chain PEM certificate and matching private key. Set Godot `reia/server_tls_name` to the certificate DNS name; set `reia/server_address` to the server IP and `reia/server_port` to its UDP port.
 6. Never put a Firebase service-account JSON file or Admin SDK private key in the client or Git repository.
 
 ## Important production security blocker
