@@ -59,10 +59,9 @@ pub async fn start_quinn_client(
     let mut retries = 0;
     let max_retries = 5;
 
-    // "localhost" here matches the dummy cert generated on the server
     loop {
         match endpoint
-            .connect(server_addr, "localhost")
+            .connect(server_addr, &server_name)
             .map_err(|e| NetworkInitError::ConnectionFailed(e.to_string()))?
             .await
         {
