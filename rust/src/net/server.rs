@@ -1,4 +1,5 @@
 use crate::net::error::NetworkInitError;
+use crate::net::op_codes::OpCode;
 use crate::net::packets::{IncomingPacket, LifecycleEvent, OutgoingPacket};
 use crate::state::world_state::WorldState;
 
@@ -94,6 +95,10 @@ pub async fn start_quinn_server(
         while let Ok(packet) = rx_out.recv_async().await {
             // Find the correct client connection
             if let Some(conn) = connections_for_out.get(&packet.target_id) {
+                if packet.op_code == OpCode::AdminKick as u16 {
+                    conn.value().close(quinn::VarInt::from_u32(1), b"Disconnected by administrator");
+                    continue;
+                }
                 let mut buffer = Vec::with_capacity(2 + packet.payload.len());
                 buffer.extend_from_slice(&packet.op_code.to_le_bytes());
                 buffer.extend_from_slice(&packet.payload);
