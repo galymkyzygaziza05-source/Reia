@@ -121,6 +121,12 @@ pub async fn handle_client(
                             }
                             Err(reason) => {
                                 tracing::warn!("Authentication rejected for client {}: {}", client_id, reason);
+                                let mut response = Vec::with_capacity(2 + reason.len());
+                                response.extend_from_slice(&(OpCode::AuthFailed as u16).to_le_bytes());
+                                response.extend_from_slice(reason.as_bytes());
+                                if let Err(error) = conn.send_datagram(response.into()) {
+                                    tracing::debug!("Could not send auth rejection to client {}: {}", client_id, error);
+                                }
                                 // Fail closed: no gameplay datagrams are accepted for this connection.
                             }
                         }
