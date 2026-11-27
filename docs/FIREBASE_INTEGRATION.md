@@ -70,8 +70,8 @@ Release QUIC clients validate server certificates against trusted public roots a
 ## Still not implemented
 
 - Persistent bans, audit logs, server configuration controls, and moderation history.
-- Firebase token revocation checks and refresh-token/session renewal.
-- Persistent player profiles, account linking, and password reset UI.
+- Firebase token revocation checks and background refresh for already-connected sessions.
+- Persistent player profiles and account linking.
 - Firestore schema and Security Rules.
 - Provisioning and configuring a valid production QUIC certificate for the actual server domain.
 - End-to-end Godot export/runtime verification. Rust CI and Godot parsing/build checks must pass before this branch is considered complete.
