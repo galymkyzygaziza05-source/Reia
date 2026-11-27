@@ -94,8 +94,18 @@ impl RustCore {
         // Spawn the Quinn Server in the background
         let state_clone = self.world_state.clone();
         let tx_life_clone = tx_life.clone();
+        let firebase_api_key = std::env::var("FIREBASE_API_KEY").unwrap_or_default();
         rt.spawn(async move {
-            if let Err(e) = start_quinn_server(port, tx, rx_out, tx_life, state_clone).await {
+            if let Err(e) = start_quinn_server(
+                port,
+                firebase_api_key,
+                tx,
+                rx_out,
+                tx_life,
+                state_clone,
+            )
+            .await
+            {
                 let _ = tx_life_clone.send(LifecycleEvent::ServerStartFailed(e.to_string()));
             }
         });
