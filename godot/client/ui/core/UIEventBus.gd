@@ -18,6 +18,13 @@ class AuthEvents extends RefCounted:
 	signal request_login(username: String, token: String)
 	signal login_success(zone_id: Zone.ID)
 	signal login_failed(reason: String)
+	signal admin_access_granted()
+
+class AdminEvents extends RefCounted:
+	signal status_received(players: Array)
+	signal announcement_received(message: String)
+	signal error_received(message: String)
+	signal success_received(message: String)
 
 class InventoryEvents extends RefCounted:
 	signal inventory_updated()
@@ -44,7 +51,9 @@ var session := SessionEvents.new()
 ## Access via UIEventBus.auth.request_login.emit()
 var auth := AuthEvents.new()
 
-## Access via UIEventBus.inventory.inventory_updated.emit()
+## Access via UIEventBus.admin.status_received.emit()
+var admin := AdminEvents.new()
+
 var inventory := InventoryEvents.new()
 
 ## Access via UIEventBus.combat.player_health_changed.emit()

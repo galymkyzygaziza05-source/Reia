@@ -7,11 +7,12 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::Duration;
 
-/// A dummy verifier to accept our self-signed rcgen certificates during development.
+#[cfg(debug_assertions)]
 #[derive(Debug)]
-struct SkipServerVerification;
+struct LocalhostDevVerifier;
 
-impl rustls::client::danger::ServerCertVerifier for SkipServerVerification {
+#[cfg(debug_assertions)]
+impl rustls::client::danger::ServerCertVerifier for LocalhostDevVerifier {
     fn verify_server_cert(
         &self,
         _end_entity: &rustls::pki_types::CertificateDer<'_>,
@@ -42,8 +43,6 @@ impl rustls::client::danger::ServerCertVerifier for SkipServerVerification {
     }
 
     fn supported_verify_schemes(&self) -> Vec<rustls::SignatureScheme> {
-        // Provide all standard schemes to ensure compatibility with rcgen's
-        // defaults (ECDSA, ED25519, RSA)
         vec![
             rustls::SignatureScheme::RSA_PKCS1_SHA256,
             rustls::SignatureScheme::ECDSA_NISTP256_SHA256,
@@ -59,6 +58,7 @@ impl rustls::client::danger::ServerCertVerifier for SkipServerVerification {
 
 pub async fn start_quinn_client(
     ip: String,
+    server_name: String,
     port: u16,
     tx_in: Sender<IncomingPacket>,
     rx_out: Receiver<OutgoingPacket>,
@@ -66,13 +66,36 @@ pub async fn start_quinn_client(
 ) -> Result<(), NetworkInitError> {
     let _ = rustls::crypto::ring::default_provider().install_default();
 
-    // Configure the Client to skip cert validation
-    let mut crypto = rustls::ClientConfig::builder()
-        .dangerous()
-        .with_custom_certificate_verifier(Arc::new(SkipServerVerification))
-        .with_no_client_auth();
+    let addr_string = format!("{}:{}", ip, port);
+    let server_addr: SocketAddr = addr_string
+        .parse()
+        .map_err(|_| NetworkInitError::InvalidAddress(addr_string))?;
 
-    // Apply ALPN protocols directly to the rustls config
+    // Release builds always validate against trusted public roots. Debug builds
+    // may use the generated self-signed certificate only for loopback localhost.
+    #[cfg(debug_assertions)]
+    let mut crypto = if server_addr.ip().is_loopback() && server_name == "localhost" {
+        rustls::ClientConfig::builder()
+            .dangerous()
+            .with_custom_certificate_verifier(Arc::new(LocalhostDevVerifier))
+            .with_no_client_auth()
+    } else {
+        let root_store =
+            rustls::RootCertStore::from_iter(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
+        rustls::ClientConfig::builder()
+            .with_root_certificates(root_store)
+            .with_no_client_auth()
+    };
+
+    #[cfg(not(debug_assertions))]
+    let mut crypto = {
+        let root_store =
+            rustls::RootCertStore::from_iter(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
+        rustls::ClientConfig::builder()
+            .with_root_certificates(root_store)
+            .with_no_client_auth()
+    };
+
     crypto.alpn_protocols = vec![b"mmo-proto".to_vec()];
 
     // Explicitly configure transport settings to prevent drops during Godot Scene Loads
@@ -98,18 +121,12 @@ pub async fn start_quinn_client(
         })?;
     endpoint.set_default_client_config(client_config);
 
-    let addr_string = format!("{}:{}", ip, port);
-    let server_addr: SocketAddr = addr_string
-        .parse()
-        .map_err(|_| NetworkInitError::InvalidAddress(addr_string))?;
-
     let mut retries = 0;
     let max_retries = 5;
 
-    // "localhost" here matches the dummy cert generated on the server
     loop {
         match endpoint
-            .connect(server_addr, "localhost")
+            .connect(server_addr, &server_name)
             .map_err(|e| NetworkInitError::ConnectionFailed(e.to_string()))?
             .await
         {
@@ -165,7 +182,42 @@ pub async fn start_quinn_client(
                     buffer.extend_from_slice(&outgoing.op_code.to_le_bytes());
                     buffer.extend_from_slice(&outgoing.payload);
 
-                    if connection.send_datagram(buffer.into()).is_err() {
+                    if outgoing.op_code == OpCode::AuthRequest as u16 {
+                        // Firebase ID tokens are sent on a reliable QUIC stream,
+                        // never in lossy movement datagrams.
+                        match connection.open_uni().await {
+                            Ok(mut stream) => {
+                                if let Err(error) = stream.write_all(&buffer).await {
+                                    tracing::error!(
+                                        "Failed to write authentication stream: {}",
+                                        error
+                                    );
+                                    let _ = tx_life
+                                        .send_async(LifecycleEvent::ClientDisconnected(
+                                            "Could not send authentication request.".to_string(),
+                                        ))
+                                        .await;
+                                    break;
+                                }
+                                if let Err(error) = stream.finish() {
+                                    tracing::error!(
+                                        "Failed to finish authentication stream: {}",
+                                        error
+                                    );
+                                    break;
+                                }
+                            }
+                            Err(error) => {
+                                tracing::error!("Could not open authentication stream: {}", error);
+                                let _ = tx_life
+                                    .send_async(LifecycleEvent::ClientDisconnected(
+                                        "Could not open authentication channel.".to_string(),
+                                    ))
+                                    .await;
+                                break;
+                            }
+                        }
+                    } else if connection.send_datagram(buffer.into()).is_err() {
                         tracing::error!("Failed to send datagram to server. Connection lost.");
                         let _ = tx_life
                             .send_async(LifecycleEvent::ClientDisconnected(

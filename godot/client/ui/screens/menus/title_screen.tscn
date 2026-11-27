@@ -30,30 +30,67 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_constants/margin_left = 32
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 32
+theme_override_constants/margin_bottom = 24
 
 [node name="FlowStates" type="CenterContainer" parent="ScreenContainer" unique_id=1282917142]
 layout_mode = 2
 
 [node name="MainMenu" type="VBoxContainer" parent="ScreenContainer/FlowStates" unique_id=842333544]
 layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="TitleLabel" type="Label" parent="ScreenContainer/FlowStates/MainMenu"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 48
+text = "REIA"
+horizontal_alignment = 1
+
+[node name="SubtitleLabel" type="Label" parent="ScreenContainer/FlowStates/MainMenu"]
+custom_minimum_size = Vector2(460, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 17
+text = "A WORLD OF REALMS, MAGIC & ADVENTURE"
+horizontal_alignment = 1
+
+[node name="DescriptionLabel" type="Label" parent="ScreenContainer/FlowStates/MainMenu"]
+custom_minimum_size = Vector2(460, 0)
+layout_mode = 2
+text = "Explore a fantasy world. Discover your story."
+horizontal_alignment = 1
+autowrap_mode = 3
 
 [node name="BtnMainPlay" type="Button" parent="ScreenContainer/FlowStates/MainMenu" unique_id=344494969]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"PrimaryActionButton"
-text = "Play"
+text = "PLAY"
+
+[node name="BtnAbout" type="Button" parent="ScreenContainer/FlowStates/MainMenu"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"PrimaryActionButton"
+text = "ABOUT REIA"
+
+[node name="BtnDevelopers" type="Button" parent="ScreenContainer/FlowStates/MainMenu"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"PrimaryActionButton"
+text = "DEVELOPERS"
 
 [node name="BtnSettings" type="Button" parent="ScreenContainer/FlowStates/MainMenu" unique_id=568793574]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"PrimaryActionButton"
-text = "Settings"
+text = "SETTINGS"
 
 [node name="BtnQuit" type="Button" parent="ScreenContainer/FlowStates/MainMenu" unique_id=857854876]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"PrimaryActionButton"
-text = "Quit"
+text = "QUIT"
 
 [node name="PlayMenu" type="VBoxContainer" parent="ScreenContainer/FlowStates" unique_id=2105121867]
 visible = false
@@ -68,31 +105,41 @@ text = "Singleplayer"
 
 [node name="HSeparator1" type="HSeparator" parent="ScreenContainer/FlowStates/PlayMenu" unique_id=1546939683]
 layout_mode = 2
-theme_override_constants/separation = 16
 
 [node name="InputUsername" type="LineEdit" parent="ScreenContainer/FlowStates/PlayMenu" unique_id=568040657]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"BaseLineEdit"
-placeholder_text = "username"
+placeholder_text = "email for online / name for solo"
 
 [node name="InputPassword" type="LineEdit" parent="ScreenContainer/FlowStates/PlayMenu" unique_id=1737429817]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"BaseLineEdit"
-placeholder_text = "password not needed"
-editable = false
+placeholder_text = "password"
 secret = true
 
 [node name="BtnPlayOnline" type="Button" parent="ScreenContainer/FlowStates/PlayMenu" unique_id=1725928505]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"PrimaryActionButton"
-text = "Play Online"
+text = "Sign In & Play Online"
+
+
+[node name="BtnPasswordReset" type="Button" parent="ScreenContainer/FlowStates/PlayMenu"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"PrimaryActionButton"
+text = "Forgot Password?"
+
+[node name="BtnRegister" type="Button" parent="ScreenContainer/FlowStates/PlayMenu"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"PrimaryActionButton"
+text = "Create Account"
 
 [node name="HSeparator2" type="HSeparator" parent="ScreenContainer/FlowStates/PlayMenu" unique_id=1924108432]
 layout_mode = 2
-theme_override_constants/separation = 16
 
 [node name="HostRow" type="HBoxContainer" parent="ScreenContainer/FlowStates/PlayMenu" unique_id=1033551914]
 custom_minimum_size = Vector2(350, 0)
@@ -114,10 +161,33 @@ text = "Host Only"
 
 [node name="HSeparator3" type="HSeparator" parent="ScreenContainer/FlowStates/PlayMenu" unique_id=1580226598]
 layout_mode = 2
-theme_override_constants/separation = 16
 
 [node name="BtnBack" type="Button" parent="ScreenContainer/FlowStates/PlayMenu" unique_id=1084603445]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"PrimaryActionButton"
 text = "Go Back"
+
+[node name="InfoMenu" type="VBoxContainer" parent="ScreenContainer/FlowStates"]
+visible = false
+custom_minimum_size = Vector2(520, 0)
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="InfoTitle" type="Label" parent="ScreenContainer/FlowStates/InfoMenu"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+horizontal_alignment = 1
+
+[node name="InfoBody" type="Label" parent="ScreenContainer/FlowStates/InfoMenu"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(520, 0)
+layout_mode = 2
+autowrap_mode = 3
+
+[node name="BtnInfoBack" type="Button" parent="ScreenContainer/FlowStates/InfoMenu"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"PrimaryActionButton"
+text = "BACK"

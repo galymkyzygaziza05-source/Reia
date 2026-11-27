@@ -10,6 +10,7 @@ on:
   push:
     branches:
       - master
+      - feature/darkhan-title-and-admin-foundation
     paths:
       - "rust/**"
       - ".github/workflows/rust_ci.yml"

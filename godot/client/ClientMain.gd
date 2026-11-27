@@ -37,7 +37,10 @@ func _ready() -> void:
 		UIUtils.safe_connect(rust_core.on_client_disconnected, _on_network_disconnected, "ClientMain on_client_disconnected")
 
 
-		rust_core.start_client(ip, port)
+		var tls_server_name := String(ProjectSettings.get_setting("reia/server_tls_name", "")).strip_edges()
+		if tls_server_name.is_empty():
+			tls_server_name = ip
+		rust_core.start_client(ip, port, tls_server_name)
 
 		print("[CLIENT] Connecting to server at %s:%d..." % [ip, port])
 	else:
@@ -48,9 +51,10 @@ func _ready() -> void:
 
 func _on_network_connected() -> void:
 	print("[CLIENT] Connection established! Requesting Authentication...")
-	_send_auth_request()
+	await _send_auth_request()
 
 func _on_network_disconnected(reason: String) -> void:
+	FirebaseAuth.is_admin = false
 	print("[CLIENT] Disconnected from server: ", reason)
 
 	# Return the user to the Main Menu and alert them
@@ -58,13 +62,30 @@ func _on_network_disconnected(reason: String) -> void:
 	UIModalManager.show_notification("Connection Failed", reason)
 
 func _send_auth_request() -> void:
-	var writer := StreamPeerBuffer.new()
-	writer.put_string(UserPreferences.get_username())
-	writer.put_string("dummy_token")
+	var auth_payload: Dictionary
+	if is_offline:
+		# Offline sessions do not cross the network and do not receive admin privileges.
+		auth_payload = {
+			"username": UserPreferences.get_username(),
+			"uid": "offline-local",
+			"email": "",
+			"email_verified": false,
+			"is_admin": false
+		}
+	else:
+		var token_ready: bool = await FirebaseAuth.ensure_valid_token()
+		if not token_ready:
+			UIModalManager.show_notification("Sign in required", "Your session expired. Sign in again with your verified Firebase account.")
+			SceneManager.transition_to_screen(Scenes.Menus.TITLE_SCREEN)
+			return
+		auth_payload = {
+			"username": UserPreferences.get_username(),
+			"idToken": FirebaseAuth.id_token
+		}
 
-	# Target 0 sends it to the Server
-	NetworkRouter.client.queue_packet(0, OpCode.ID.AUTH_REQUEST, writer.data_array)
-	print("[CLIENT] Sent AuthRequest. Awaiting Server approval...")
+	# Reliable QUIC transport is selected by the Rust layer for AUTH_REQUEST.
+	NetworkRouter.client.queue_packet(0, OpCode.ID.AUTH_REQUEST, JSON.stringify(auth_payload).to_utf8_buffer())
+	print("[CLIENT] Sent authentication request. Awaiting server verification...")
 
 func _on_rust_packets(buckets: Dictionary) -> void:
 	NetworkRouter.client.incoming_buckets = buckets

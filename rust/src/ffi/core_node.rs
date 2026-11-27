@@ -94,8 +94,18 @@ impl RustCore {
         // Spawn the Quinn Server in the background
         let state_clone = self.world_state.clone();
         let tx_life_clone = tx_life.clone();
+        let firebase_api_key = std::env::var("FIREBASE_API_KEY").unwrap_or_default();
         rt.spawn(async move {
-            if let Err(e) = start_quinn_server(port, tx, rx_out, tx_life, state_clone).await {
+            if let Err(e) = start_quinn_server(
+                port,
+                firebase_api_key,
+                tx,
+                rx_out,
+                tx_life,
+                state_clone,
+            )
+            .await
+            {
                 let _ = tx_life_clone.send(LifecycleEvent::ServerStartFailed(e.to_string()));
             }
         });
@@ -105,7 +115,7 @@ impl RustCore {
 
     /// Called by ClientMain.gd to connect to the server
     #[func]
-    pub fn start_client(&mut self, server_ip: GString, port: u16) {
+    pub fn start_client(&mut self, server_ip: GString, port: u16, server_name: GString) {
         let _ = tracing_subscriber::fmt::try_init();
 
         let rt = Arc::new(tokio::runtime::Runtime::new().unwrap());
@@ -120,9 +130,12 @@ impl RustCore {
         self.rx_lifecycle = Some(rx_life);
 
         let ip_str = server_ip.to_string();
+        let server_name_str = server_name.to_string();
         let tx_life_clone = tx_life.clone();
         rt.spawn(async move {
-            if let Err(e) = start_quinn_client(ip_str, port, tx_in, rx_out, tx_life).await {
+            if let Err(e) =
+                start_quinn_client(ip_str, server_name_str, port, tx_in, rx_out, tx_life).await
+            {
                 let _ = tx_life_clone.send(LifecycleEvent::ClientStartFailed(e.to_string()));
             }
         });

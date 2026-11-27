@@ -1,4 +1,5 @@
 use crate::net::error::NetworkInitError;
+use crate::net::op_codes::OpCode;
 use crate::net::packets::{IncomingPacket, LifecycleEvent, OutgoingPacket};
 use crate::state::world_state::WorldState;
 
@@ -10,9 +11,11 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicI64, Ordering};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::{fs::File, io::BufReader};
 
 pub async fn start_quinn_server(
     port: u16,
+    firebase_api_key: String,
     tx: Sender<IncomingPacket>,
     rx_out: Receiver<OutgoingPacket>,
     tx_life: Sender<LifecycleEvent>,
@@ -21,17 +24,53 @@ pub async fn start_quinn_server(
     // Explicitly install the Crypto Provider for rustls
     let _ = rustls::crypto::ring::default_provider().install_default();
 
-    // Generate dummy TLS certificate for QUIC using rcgen
-    let cert = rcgen::generate_simple_self_signed(vec!["localhost".into()])
-        .map_err(|e| NetworkInitError::CertGenerationFailed(e.to_string()))?;
-
-    let cert_der = rustls::pki_types::CertificateDer::from(cert.cert.der().to_vec());
-    let priv_key = rustls::pki_types::PrivateKeyDer::try_from(cert.signing_key.serialize_der())
-        .map_err(|e| NetworkInitError::TlsConfigFailed(e.to_string()))?;
+    // Production deployments must provide a certificate issued for the configured DNS name.
+    // A generated self-signed localhost certificate is retained only as a development fallback.
+    let (cert_chain, priv_key) = match (
+        std::env::var("REIA_TLS_CERT_PATH"),
+        std::env::var("REIA_TLS_KEY_PATH"),
+    ) {
+        (Ok(cert_path), Ok(key_path)) => {
+            let mut cert_reader = BufReader::new(
+                File::open(cert_path)
+                    .map_err(|e| NetworkInitError::TlsConfigFailed(e.to_string()))?,
+            );
+            let cert_chain = rustls_pemfile::certs(&mut cert_reader)
+                .collect::<Result<Vec<_>, _>>()
+                .map_err(|e| NetworkInitError::TlsConfigFailed(e.to_string()))?;
+            let mut key_reader = BufReader::new(
+                File::open(key_path)
+                    .map_err(|e| NetworkInitError::TlsConfigFailed(e.to_string()))?,
+            );
+            let private_key = rustls_pemfile::private_key(&mut key_reader)
+                .map_err(|e| NetworkInitError::TlsConfigFailed(e.to_string()))?
+                .ok_or_else(|| {
+                    NetworkInitError::TlsConfigFailed("TLS private key file is empty".to_string())
+                })?;
+            if cert_chain.is_empty() {
+                return Err(NetworkInitError::TlsConfigFailed(
+                    "TLS certificate chain is empty".to_string(),
+                ));
+            }
+            (cert_chain, private_key)
+        }
+        _ => {
+            tracing::warn!(
+                "Using self-signed localhost TLS certificate. This is not suitable for public servers."
+            );
+            let cert = rcgen::generate_simple_self_signed(vec!["localhost".into()])
+                .map_err(|e| NetworkInitError::CertGenerationFailed(e.to_string()))?;
+            let cert_der = rustls::pki_types::CertificateDer::from(cert.cert.der().to_vec());
+            let private_key =
+                rustls::pki_types::PrivateKeyDer::try_from(cert.signing_key.serialize_der())
+                    .map_err(|e| NetworkInitError::TlsConfigFailed(e.to_string()))?;
+            (vec![cert_der], private_key)
+        }
+    };
 
     let mut server_crypto = rustls::ServerConfig::builder()
         .with_no_client_auth()
-        .with_single_cert(vec![cert_der], priv_key)
+        .with_single_cert(cert_chain, priv_key)
         .map_err(|e| NetworkInitError::TlsConfigFailed(e.to_string()))?;
 
     server_crypto.alpn_protocols = vec![b"mmo-proto".to_vec()];
@@ -66,6 +105,11 @@ pub async fn start_quinn_server(
         while let Ok(packet) = rx_out.recv_async().await {
             // Find the correct client connection
             if let Some(conn) = connections_for_out.get(&packet.target_id) {
+                if packet.op_code == OpCode::AdminKick as u16 {
+                    conn.value()
+                        .close(quinn::VarInt::from_u32(1), b"Disconnected by administrator");
+                    continue;
+                }
                 let mut buffer = Vec::with_capacity(2 + packet.payload.len());
                 buffer.extend_from_slice(&packet.op_code.to_le_bytes());
                 buffer.extend_from_slice(&packet.payload);
@@ -91,6 +135,7 @@ pub async fn start_quinn_server(
         let tx_life_clone = tx_life.clone();
         let connections_clone = connections.clone();
         let id_counter = client_id_counter.clone();
+        let firebase_api_key = firebase_api_key.clone();
 
         tokio::spawn(async move {
             match conn.await {
@@ -112,6 +157,7 @@ pub async fn start_quinn_server(
                     crate::net::connection::handle_client(
                         client_id,
                         connection,
+                        firebase_api_key,
                         tx_clone,
                         tx_life_clone,
                         connections_clone,
