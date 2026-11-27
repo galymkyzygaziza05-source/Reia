@@ -52,6 +52,7 @@ func _on_network_connected() -> void:
 	_send_auth_request()
 
 func _on_network_disconnected(reason: String) -> void:
+	FirebaseAuth.is_admin = false
 	print("[CLIENT] Disconnected from server: ", reason)
 
 	# Return the user to the Main Menu and alert them
