@@ -15,6 +15,7 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 pub async fn start_quinn_server(
     port: u16,
+    firebase_api_key: String,
     tx: Sender<IncomingPacket>,
     rx_out: Receiver<OutgoingPacket>,
     tx_life: Sender<LifecycleEvent>,
@@ -124,6 +125,7 @@ pub async fn start_quinn_server(
         let tx_life_clone = tx_life.clone();
         let connections_clone = connections.clone();
         let id_counter = client_id_counter.clone();
+        let firebase_api_key = firebase_api_key.clone();
 
         tokio::spawn(async move {
             match conn.await {
@@ -145,6 +147,7 @@ pub async fn start_quinn_server(
                     crate::net::connection::handle_client(
                         client_id,
                         connection,
+                        firebase_api_key,
                         tx_clone,
                         tx_life_clone,
                         connections_clone,
