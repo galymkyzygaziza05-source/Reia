@@ -8,58 +8,9 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::io::AsyncWriteExt;
 
-/// A dummy verifier to accept our self-signed rcgen certificates during development.
-#[derive(Debug)]
-struct SkipServerVerification;
-
-impl rustls::client::danger::ServerCertVerifier for SkipServerVerification {
-    fn verify_server_cert(
-        &self,
-        _end_entity: &rustls::pki_types::CertificateDer<'_>,
-        _intermediates: &[rustls::pki_types::CertificateDer<'_>],
-        _server_name: &rustls::pki_types::ServerName<'_>,
-        _ocsp_response: &[u8],
-        _now: rustls::pki_types::UnixTime,
-    ) -> Result<rustls::client::danger::ServerCertVerified, rustls::Error> {
-        Ok(rustls::client::danger::ServerCertVerified::assertion())
-    }
-
-    fn verify_tls12_signature(
-        &self,
-        _message: &[u8],
-        _cert: &rustls::pki_types::CertificateDer<'_>,
-        _dss: &rustls::DigitallySignedStruct,
-    ) -> Result<rustls::client::danger::HandshakeSignatureValid, rustls::Error> {
-        Ok(rustls::client::danger::HandshakeSignatureValid::assertion())
-    }
-
-    fn verify_tls13_signature(
-        &self,
-        _message: &[u8],
-        _cert: &rustls::pki_types::CertificateDer<'_>,
-        _dss: &rustls::DigitallySignedStruct,
-    ) -> Result<rustls::client::danger::HandshakeSignatureValid, rustls::Error> {
-        Ok(rustls::client::danger::HandshakeSignatureValid::assertion())
-    }
-
-    fn supported_verify_schemes(&self) -> Vec<rustls::SignatureScheme> {
-        // Provide all standard schemes to ensure compatibility with rcgen's
-        // defaults (ECDSA, ED25519, RSA)
-        vec![
-            rustls::SignatureScheme::RSA_PKCS1_SHA256,
-            rustls::SignatureScheme::ECDSA_NISTP256_SHA256,
-            rustls::SignatureScheme::ECDSA_NISTP384_SHA384,
-            rustls::SignatureScheme::ED25519,
-            rustls::SignatureScheme::RSA_PSS_SHA256,
-            rustls::SignatureScheme::RSA_PSS_SHA384,
-            rustls::SignatureScheme::RSA_PSS_SHA512,
-            rustls::SignatureScheme::ED448,
-        ]
-    }
-}
-
 pub async fn start_quinn_client(
     ip: String,
+    server_name: String,
     port: u16,
     tx_in: Sender<IncomingPacket>,
     rx_out: Receiver<OutgoingPacket>,
@@ -67,13 +18,14 @@ pub async fn start_quinn_client(
 ) -> Result<(), NetworkInitError> {
     let _ = rustls::crypto::ring::default_provider().install_default();
 
-    // Configure the Client to skip cert validation
+    // Validate the server certificate against trusted public roots.
+    // Keep the DNS certificate name separate from the socket address.
+    let root_store = rustls::RootCertStore::from_iter(
+        webpki_roots::TLS_SERVER_ROOTS.iter().cloned()
+    );
     let mut crypto = rustls::ClientConfig::builder()
-        .dangerous()
-        .with_custom_certificate_verifier(Arc::new(SkipServerVerification))
+        .with_root_certificates(root_store)
         .with_no_client_auth();
-
-    // Apply ALPN protocols directly to the rustls config
     crypto.alpn_protocols = vec![b"mmo-proto".to_vec()];
 
     // Explicitly configure transport settings to prevent drops during Godot Scene Loads
