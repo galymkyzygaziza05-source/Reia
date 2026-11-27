@@ -72,3 +72,71 @@ grow_vertical = 2
 layout_mode = 2
 script = ExtResource("4_i7b7o")
 metadata/_custom_type_script = "uid://lrlvy8wewlkd"
+
+
+[node name="AdminButton" type="Button" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -160.0
+offset_top = 28.0
+offset_right = -28.0
+offset_bottom = 72.0
+grow_horizontal = 0
+text = "ADMIN"
+visible = false
+
+[node name="AdminPanel" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -408.0
+offset_top = 84.0
+offset_right = -28.0
+offset_bottom = 440.0
+grow_horizontal = 0
+
+[node name="AdminLayout" type="VBoxContainer" parent="AdminPanel"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="AdminTitle" type="Label" parent="AdminPanel/AdminLayout"]
+layout_mode = 2
+text = "REIA ADMINISTRATION"
+
+[node name="AdminStatus" type="Label" parent="AdminPanel/AdminLayout"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(340, 180)
+layout_mode = 2
+text = "Loading server status..."
+autowrap_mode = 3
+
+[node name="AdminAnnouncement" type="LineEdit" parent="AdminPanel/AdminLayout"]
+unique_name_in_owner = true
+layout_mode = 2
+placeholder_text = "Announcement for all players (max 240 chars)"
+max_length = 240
+
+[node name="AdminActions" type="HBoxContainer" parent="AdminPanel/AdminLayout"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="AdminRefresh" type="Button" parent="AdminPanel/AdminLayout/AdminActions"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "REFRESH"
+
+[node name="AdminSend" type="Button" parent="AdminPanel/AdminLayout/AdminActions"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "BROADCAST"
+
+[node name="AdminClose" type="Button" parent="AdminPanel/AdminLayout/AdminActions"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "CLOSE"
