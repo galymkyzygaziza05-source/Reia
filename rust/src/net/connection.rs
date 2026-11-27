@@ -7,7 +7,6 @@ use dashmap::DashMap;
 use flume::Sender;
 use quinn::Connection;
 use std::sync::Arc;
-use tokio::io::AsyncReadExt;
 
 const MAX_AUTH_FRAME: usize = 16 * 1024;
 
