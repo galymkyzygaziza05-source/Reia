@@ -140,3 +140,18 @@ text = "BROADCAST"
 unique_name_in_owner = true
 layout_mode = 2
 text = "CLOSE"
+
+[node name="AdminModerationRow" type="HBoxContainer" parent="AdminPanel/AdminLayout"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="AdminKickId" type="LineEdit" parent="AdminPanel/AdminLayout/AdminModerationRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Player ID to kick"
+
+[node name="AdminKick" type="Button" parent="AdminPanel/AdminLayout/AdminModerationRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "KICK PLAYER"
