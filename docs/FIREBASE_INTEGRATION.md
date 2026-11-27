@@ -47,7 +47,8 @@ The following authentication foundation is now present in the working branch:
 - Gameplay datagrams are ignored until the connection passes Firebase verification.
 - The trusted server derives UID, verified email, and administrator status. The only administrator allowlist entry is `llisteenn@gmail.com`.
 - Godot creates a player only from the trusted identity payload. The first-join training dummy has been removed.
-- The server includes the administrator bit in the authentication-success response; the client exposes a dedicated admin-access event.
+- The server includes the administrator bit in the authentication-success response; the client opens the dashboard only after that server-approved claim.
+- The first admin dashboard supports online-player status and server-wide announcements. Rust drops administrator commands from every non-admin connection before they reach Godot.
 
 ## Required configuration before running online
 
@@ -66,7 +67,7 @@ The QUIC client now validates server certificates against trusted public roots a
 
 ## Still not implemented
 
-- A complete in-game administrator dashboard and its server-side moderation/management commands.
+- Player moderation actions such as kick/ban, audit logs, server configuration controls, and persistent ban storage.
 - Firebase token revocation checks and refresh-token/session renewal.
 - Persistent player profiles, account linking, password reset UI, and token refresh/session renewal.
 - Firestore schema and Security Rules.
