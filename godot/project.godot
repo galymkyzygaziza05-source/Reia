@@ -50,7 +50,7 @@ UserPreferences="*uid://3krmnajq1oo5"
 FirebaseAuth="*res://client/core/FirebaseAuth.gd"
 
 [reia]
-firebase_web_api_key=""
+firebase_web_api_key="AIzaSyC12extJThE7gJKf68ZX6z5U3RKm4MHIAs"
 server_tls_name="localhost"
 
 [debug]
