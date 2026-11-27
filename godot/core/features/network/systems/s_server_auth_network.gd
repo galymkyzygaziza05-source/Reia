@@ -73,7 +73,8 @@ func _process_auth(bucket: Dictionary) -> void:
 
 		newly_joined_clients.append({
 			"net_id": net_id,
-			"username": username
+			"username": username,
+			"is_admin": is_admin
 		})
 
 	if newly_joined_clients.is_empty():
@@ -84,10 +85,12 @@ func _process_auth(bucket: Dictionary) -> void:
 	for client: Dictionary in newly_joined_clients:
 		var net_id: int = client["net_id"]
 		var username: String = client["username"]
+		var is_admin: bool = client["is_admin"]
 
 		writer.clear()
 		writer.put_64(net_id)
 		writer.put_u32(Zone.ID.WATERBROOK)
+		writer.put_u8(1 if is_admin else 0)
 		NetworkRouter.server.queue_packet(net_id, OpCode.ID.AUTH_SUCCESS, writer.data_array)
 
 		_send_existing_entities_to_client(net_id)
