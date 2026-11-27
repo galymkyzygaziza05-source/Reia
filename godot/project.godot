@@ -51,6 +51,7 @@ FirebaseAuth="*res://client/core/FirebaseAuth.gd"
 
 [reia]
 firebase_web_api_key=""
+server_tls_name="localhost"
 
 [debug]
 
