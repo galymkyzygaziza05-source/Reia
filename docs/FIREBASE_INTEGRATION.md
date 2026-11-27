@@ -34,6 +34,43 @@ A production implementation must:
 - [ ] Add Firestore collections and restrictive Security Rules only after the data model is implemented.
 - [ ] Add an admin-only panel only after server-verified administrator identity is available.
 
+
+
+## Implemented in the Reia adaptation branch
+
+The following authentication foundation is now present in the working branch:
+
+- Godot client email/password sign-in and account registration use Firebase Authentication REST endpoints.
+- New accounts receive an email-verification message; online sign-in is refused until Firebase reports `emailVerified=true`.
+- The Firebase ID token is kept in memory and sent in a reliable QUIC unidirectional stream, not a lossy gameplay datagram.
+- The Rust server verifies the token through Firebase Identity Toolkit `accounts:lookup` before marking a connection authenticated.
+- Gameplay datagrams are ignored until the connection passes Firebase verification.
+- The trusted server derives UID, verified email, and administrator status. The only administrator allowlist entry is `llisteenn@gmail.com`.
+- Godot creates a player only from the trusted identity payload. The first-join training dummy has been removed.
+- The server includes the administrator bit in the authentication-success response; the client exposes a dedicated admin-access event.
+
+## Required configuration before running online
+
+1. Enable **Email/Password** in Firebase Authentication.
+2. Enable email verification in the account workflow and ensure Firebase email templates are configured.
+3. In Godot Project Settings, set `reia/firebase_web_api_key` to the Web API key from the selected Firebase project. This is a public Firebase client identifier, not a service-account credential.
+4. On the trusted game server, set:
+   - `FIREBASE_PROJECT_ID=gen-lang-client-0722704032`
+   - `FIREBASE_WEB_API_KEY=<the same Firebase Web API key>`
+5. Never put a Firebase service-account JSON file or Admin SDK private key in the client or Git repository.
+
+## Important production security blocker
+
+The existing QUIC client currently uses a development certificate verifier that accepts any server certificate. The Firebase token is encrypted in transit, but without server certificate validation a man-in-the-middle could impersonate the game server and capture a token. **Do not deploy this authentication flow for public users or treat it as production-secure until the QUIC server certificate is validated or pinned.** The current server also generates a self-signed localhost certificate for development.
+
+## Still not implemented
+
+- A complete in-game administrator dashboard and its server-side moderation/management commands.
+- Persistent player profiles, account linking, password reset UI, and token refresh/session renewal.
+- Firestore schema and Security Rules.
+- Production QUIC certificate provisioning and validation.
+- End-to-end Godot export/runtime verification. Rust CI and Godot parsing/build checks must pass before this branch is considered complete.
+
 ## Current implementation status
 
 This file records the selected project and security design. It does **not** claim that Firebase Authentication, Firestore, token verification, account registration, or the administrator panel are already implemented. The current placeholder authentication must be replaced before public multiplayer access is considered secure.
