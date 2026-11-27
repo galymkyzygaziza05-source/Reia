@@ -6,6 +6,8 @@
 pub enum OpCode {
     AuthRequest = 11063,
     AuthSuccess = 38012,
+    AdminCommand = 49211,
+    AdminResponse = 21644,
     StateSync = 17737,
     EntitySpawn = 27986,
     EntityDespawn = 34947,
@@ -24,6 +26,8 @@ impl TryFrom<u16> for OpCode {
         match v {
             11063 => Ok(OpCode::AuthRequest),
             38012 => Ok(OpCode::AuthSuccess),
+            49211 => Ok(OpCode::AdminCommand),
+            21644 => Ok(OpCode::AdminResponse),
             17737 => Ok(OpCode::StateSync),
             27986 => Ok(OpCode::EntitySpawn),
             34947 => Ok(OpCode::EntityDespawn),
