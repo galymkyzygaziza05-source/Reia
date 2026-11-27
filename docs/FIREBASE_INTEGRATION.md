@@ -13,9 +13,9 @@ The Android package name was checked against `godot/project.godot` and the proje
 
 ## Security requirements before enabling accounts
 
-The current game protocol sends a placeholder `dummy_token` in `ClientMain.gd`. The current Godot server auth system reads but does not validate that token. Do not treat the current login flow as authenticated or expose administrator actions through it.
+The authentication foundation is implemented on the working branch, but it is not ready for public release until the required Firebase and TLS configuration is applied and end-to-end tests pass.
 
-A production implementation must:
+Production requirements:
 
 1. Sign users in with Firebase Authentication and obtain a Firebase ID token.
 2. Send that ID token to a trusted server-side verifier over a protected authentication handshake.
@@ -30,9 +30,9 @@ A production implementation must:
 
 - [ ] Enable Email/Password in Firebase Authentication.
 - [ ] Download the Android `google-services.json` for package `com.quaintstudios.reia` if a plugin or Android export workflow requires it. The project currently uses a Godot/Rust architecture; downloading this file alone does not integrate Firebase.
-- [ ] Decide and implement the trusted server-side token verification endpoint/handshake.
+- [x] Implement a trusted server-side Firebase token verification handshake in the adaptation branch; run end-to-end tests before release.
 - [ ] Add Firestore collections and restrictive Security Rules only after the data model is implemented.
-- [ ] Add an admin-only panel only after server-verified administrator identity is available.
+- [ ] Complete the admin-only dashboard and server-authorized management commands.
 
 
 
@@ -67,6 +67,7 @@ The QUIC client now validates server certificates against trusted public roots a
 ## Still not implemented
 
 - A complete in-game administrator dashboard and its server-side moderation/management commands.
+- Firebase token revocation checks and refresh-token/session renewal.
 - Persistent player profiles, account linking, password reset UI, and token refresh/session renewal.
 - Firestore schema and Security Rules.
 - Provisioning and configuring a valid production QUIC certificate for the actual server domain.
@@ -74,4 +75,4 @@ The QUIC client now validates server certificates against trusted public roots a
 
 ## Current implementation status
 
-Firebase email/password account creation, email verification, client sign-in, reliable token transport, server-side token lookup, pre-authentication gameplay gating, and server-derived administrator identity are implemented in this working branch. Firestore, the full administrator dashboard, persistent profiles, password reset, refresh-token renewal, and production QUIC certificate validation remain outstanding. The branch must pass CI and runtime testing before merge or release.
+Firebase email/password account creation, email verification, client sign-in, reliable token transport, server-side token lookup, pre-authentication gameplay gating, and server-derived administrator identity are implemented in this working branch. Firestore, the full administrator dashboard, persistent profiles, password reset, refresh-token renewal, and production QUIC certificate provisioning and runtime validation remain outstanding. The branch must pass CI and runtime testing before merge or release.
