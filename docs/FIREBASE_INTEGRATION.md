@@ -32,7 +32,8 @@ Production requirements:
 - [ ] Download the Android `google-services.json` for package `com.quaintstudios.reia` if a plugin or Android export workflow requires it. The project currently uses a Godot/Rust architecture; downloading this file alone does not integrate Firebase.
 - [x] Implement a trusted server-side Firebase token verification handshake in the adaptation branch; run end-to-end tests before release.
 - [ ] Add Firestore collections and restrictive Security Rules only after the data model is implemented.
-- [ ] Complete the admin-only dashboard and server-authorized management commands.
+- [x] Add the initial admin-only dashboard with online status, announcements and kick.
+- [ ] Expand moderation, audit history, persistent bans and server configuration controls.
 
 
 
@@ -70,11 +71,11 @@ Release QUIC clients validate server certificates against trusted public roots a
 
 - Persistent bans, audit logs, server configuration controls, and moderation history.
 - Firebase token revocation checks and refresh-token/session renewal.
-- Persistent player profiles, account linking, password reset UI, and token refresh/session renewal.
+- Persistent player profiles, account linking, and password reset UI.
 - Firestore schema and Security Rules.
 - Provisioning and configuring a valid production QUIC certificate for the actual server domain.
 - End-to-end Godot export/runtime verification. Rust CI and Godot parsing/build checks must pass before this branch is considered complete.
 
 ## Current implementation status
 
-Firebase email/password account creation, email verification, client sign-in, reliable token transport, server-side token lookup, pre-authentication gameplay gating, and server-derived administrator identity are implemented in this working branch. Firestore, the full administrator dashboard, persistent profiles, password reset, refresh-token renewal, and production QUIC certificate provisioning and runtime validation remain outstanding. The branch must pass CI and runtime testing before merge or release.
+Firebase email/password account creation, email verification, client sign-in, reliable token transport, server-side token lookup, pre-authentication gameplay gating, and server-derived administrator identity are implemented in this working branch. The basic admin dashboard is implemented; advanced moderation, audit logs, persistent bans, Firestore, persistent profiles, password reset, token revocation/refresh, and production QUIC certificate provisioning and runtime validation remain outstanding. The branch must pass CI and runtime testing before merge or release.
