@@ -49,7 +49,7 @@ func _ready() -> void:
 
 func _on_network_connected() -> void:
 	print("[CLIENT] Connection established! Requesting Authentication...")
-	_send_auth_request()
+	await _send_auth_request()
 
 func _on_network_disconnected(reason: String) -> void:
 	FirebaseAuth.is_admin = false
@@ -71,14 +71,14 @@ func _send_auth_request() -> void:
 			"is_admin": false
 		}
 	else:
-		var token := FirebaseAuth.id_token
-		if token.is_empty():
-			UIModalManager.show_notification("Sign in required", "Sign in with your verified Firebase account before joining online.")
+		var token_ready: bool = await FirebaseAuth.ensure_valid_token()
+		if not token_ready:
+			UIModalManager.show_notification("Sign in required", "Your session expired. Sign in again with your verified Firebase account.")
 			SceneManager.transition_to_screen(Scenes.Menus.TITLE_SCREEN)
 			return
 		auth_payload = {
 			"username": UserPreferences.get_username(),
-			"idToken": token
+			"idToken": FirebaseAuth.id_token
 		}
 
 	# Reliable QUIC transport is selected by the Rust layer for AUTH_REQUEST.
