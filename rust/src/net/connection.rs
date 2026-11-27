@@ -14,6 +14,7 @@ const MAX_AUTH_FRAME: usize = 16 * 1024;
 pub async fn handle_client(
     client_id: i64,
     conn: Connection,
+    firebase_api_key: String,
     tx: Sender<IncomingPacket>,
     tx_life: Sender<LifecycleEvent>,
     connections: Arc<DashMap<i64, Connection>>,
@@ -102,7 +103,7 @@ pub async fn handle_client(
                             continue;
                         }
 
-                        match firebase_auth::verify_auth_payload(&frame[2..]).await {
+                        match firebase_auth::verify_auth_payload(&frame[2..], &firebase_api_key).await {
                             Ok((identity, trusted_payload)) => {
                                 authenticated = true;
                                 is_admin = identity.is_admin;
