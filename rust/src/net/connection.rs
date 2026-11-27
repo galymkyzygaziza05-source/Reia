@@ -21,6 +21,7 @@ pub async fn handle_client(
     // A QUIC connection is not a game session. It becomes one only after a
     // Firebase ID token has been verified on this trusted server.
     let mut authenticated = false;
+    let mut is_admin = false;
 
     loop {
         tokio::select! {
@@ -37,6 +38,20 @@ pub async fn handle_client(
                             Ok(OpCode::AuthRequest) => {
                                 // Authentication is accepted only on reliable QUIC streams.
                                 tracing::warn!("Client {} attempted to authenticate over an unreliable datagram", client_id);
+                            }
+                            Ok(OpCode::AdminCommand) if is_admin => {
+                                let packet = IncomingPacket {
+                                    client_id,
+                                    op_code: op_code_raw,
+                                    payload: bytes[2..].to_vec(),
+                                };
+                                if tx.send_async(packet).await.is_err() {
+                                    tracing::error!("Godot packet bridge disconnected for admin client {}", client_id);
+                                    break;
+                                }
+                            }
+                            Ok(OpCode::AdminCommand) => {
+                                tracing::warn!("Non-admin client {} attempted an administrator command", client_id);
                             }
                             Ok(_) => {
                                 let packet = IncomingPacket {
@@ -87,6 +102,7 @@ pub async fn handle_client(
                         match firebase_auth::verify_auth_payload(&frame[2..]).await {
                             Ok((identity, trusted_payload)) => {
                                 authenticated = true;
+                                is_admin = identity.is_admin;
                                 tracing::info!(
                                     "Firebase identity verified for client {} (uid={}, admin={})",
                                     client_id,
