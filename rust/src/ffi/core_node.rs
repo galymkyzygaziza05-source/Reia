@@ -123,7 +123,9 @@ impl RustCore {
         let server_name_str = server_name.to_string();
         let tx_life_clone = tx_life.clone();
         rt.spawn(async move {
-            if let Err(e) = start_quinn_client(ip_str, server_name_str, port, tx_in, rx_out, tx_life).await {
+            if let Err(e) =
+                start_quinn_client(ip_str, server_name_str, port, tx_in, rx_out, tx_life).await
+            {
                 let _ = tx_life_clone.send(LifecycleEvent::ClientStartFailed(e.to_string()));
             }
         });
