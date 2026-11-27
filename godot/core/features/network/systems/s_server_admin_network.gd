@@ -33,6 +33,8 @@ func _process_commands(bucket: Dictionary) -> void:
 				_send_status(client_id)
 			"announce":
 				_broadcast_announcement(client_id, String(request.get("message", "")))
+			"kick":
+				_kick_player(client_id, int(request.get("target_id", -1)))
 			_:
 				_send_error(client_id, "Unknown administrator action.")
 
@@ -71,4 +73,24 @@ func _send_error(client_id: int, message: String) -> void:
 		"type": "error",
 		"message": message
 	}).to_utf8_buffer()
+	NetworkRouter.server.queue_packet(client_id, OpCode.ID.ADMIN_RESPONSE, payload)
+
+func _kick_player(admin_id: int, target_id: int) -> void:
+	if target_id < 0 or target_id == admin_id:
+		_send_error(admin_id, "Choose a different valid player ID.")
+		return
+	var target := EntityMap.server.get_entity(target_id)
+	if not target or not target.get_component(C_PlayerTag):
+		_send_error(admin_id, "That player is not online.")
+		return
+	if bool(target.get_meta("is_admin", false)):
+		_send_error(admin_id, "The administrator account cannot be kicked from this panel.")
+		return
+	var username_comp := target.get_component(C_Username) as C_Username
+	var target_name := username_comp.username if username_comp else "Player"
+	NetworkRouter.server.queue_packet(target_id, OpCode.ID.ADMIN_KICK, PackedByteArray())
+	_send_success(admin_id, "%s was disconnected." % target_name)
+
+func _send_success(client_id: int, message: String) -> void:
+	var payload := JSON.stringify({"type": "success", "message": message}).to_utf8_buffer()
 	NetworkRouter.server.queue_packet(client_id, OpCode.ID.ADMIN_RESPONSE, payload)
