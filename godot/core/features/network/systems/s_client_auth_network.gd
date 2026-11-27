@@ -21,10 +21,13 @@ func _process_auth_success(bucket: Dictionary) -> void:
 		reader.seek(offsets[i])
 		var my_net_id := reader.get_64()
 		var zone_id := reader.get_u32()
+		var is_admin := reader.get_u8() == 1
 
 		# Store who WE are so the Spawner System knows which mesh gets the camera
 		GameOrchestrator.local_client_net_id = my_net_id
 
 		# Fire to the UI to drop the TitleScreen and load the map
 		UIEventBus.auth.login_success.emit(zone_id)
+		if is_admin:
+			UIEventBus.auth.admin_access_granted.emit()
 		break # Only process Auth once per client
