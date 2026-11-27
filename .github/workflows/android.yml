@@ -9,13 +9,6 @@ on:
       - "godot/**"
       - "rust/**"
       - ".github/workflows/android.yml"
-  pull_request:
-    branches:
-      - master
-    paths:
-      - "godot/**"
-      - "rust/**"
-      - ".github/workflows/android.yml"
 
 permissions:
   contents: read
