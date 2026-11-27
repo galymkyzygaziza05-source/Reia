@@ -37,7 +37,8 @@ func _ready() -> void:
 		UIUtils.safe_connect(rust_core.on_client_disconnected, _on_network_disconnected, "ClientMain on_client_disconnected")
 
 
-		rust_core.start_client(ip, port)
+		var tls_server_name := String(ProjectSettings.get_setting("reia/server_tls_name", ip)).strip_edges()
+		rust_core.start_client(ip, port, tls_server_name)
 
 		print("[CLIENT] Connecting to server at %s:%d..." % [ip, port])
 	else:
