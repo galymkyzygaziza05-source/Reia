@@ -7,6 +7,7 @@ var id_token: String = ""
 var refresh_token: String = ""
 var email: String = ""
 var uid: String = ""
+var is_admin: bool = false
 var _http: HTTPRequest
 var _busy := false
 
@@ -93,6 +94,7 @@ func sign_out() -> void:
 	refresh_token = ""
 	email = ""
 	uid = ""
+	is_admin = false
 
 func _api_key() -> String:
 	return String(ProjectSettings.get_setting("reia/firebase_web_api_key", "")).strip_edges()
