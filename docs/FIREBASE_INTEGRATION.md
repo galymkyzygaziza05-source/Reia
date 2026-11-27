@@ -64,7 +64,7 @@ The following authentication foundation is now present in the working branch:
 
 ## Important production security blocker
 
-The QUIC client now validates server certificates against trusted public roots and checks a configurable DNS name. The server loads its certificate chain and private key from `REIA_TLS_CERT_PATH` and `REIA_TLS_KEY_PATH`. Its generated self-signed `localhost` certificate is only a development fallback and will not be trusted by the normal client. **Before public use, configure a valid certificate chain for the server domain and set Godot `reia/server_tls_name` to that exact domain.**
+Release QUIC clients validate server certificates against trusted public roots and check a configurable DNS name. Debug builds permit the generated self-signed certificate only when connecting to `localhost` over a loopback address. The server loads its production certificate chain and private key from `REIA_TLS_CERT_PATH` and `REIA_TLS_KEY_PATH`. **Before public use, configure a valid certificate chain for the server domain and set Godot `reia/server_tls_name` to that exact domain.**
 
 ## Still not implemented
 
