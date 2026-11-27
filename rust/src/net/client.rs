@@ -6,7 +6,6 @@ use quinn::{ClientConfig, Endpoint, TransportConfig};
 use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::Duration;
-use tokio::io::AsyncWriteExt;
 
 #[cfg(debug_assertions)]
 #[derive(Debug)]
