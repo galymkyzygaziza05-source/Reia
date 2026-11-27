@@ -41,7 +41,7 @@ Production requirements:
 
 The following authentication foundation is now present in the working branch:
 
-- Godot client email/password sign-in and account registration use Firebase Authentication REST endpoints.
+- Godot client email/password sign-in, account registration, password reset and refresh-token renewal before online connection use Firebase Authentication REST endpoints.
 - New accounts receive an email-verification message; online sign-in is refused until Firebase reports `emailVerified=true`.
 - The Firebase ID token is kept in memory and sent in a reliable QUIC unidirectional stream, not a lossy gameplay datagram.
 - The Rust server verifies the token through Firebase Identity Toolkit `accounts:lookup` before marking a connection authenticated.
@@ -78,4 +78,4 @@ Release QUIC clients validate server certificates against trusted public roots a
 
 ## Current implementation status
 
-Firebase email/password account creation, email verification, client sign-in, reliable token transport, server-side token lookup, pre-authentication gameplay gating, and server-derived administrator identity are implemented in this working branch. The basic admin dashboard is implemented; advanced moderation, audit logs, persistent bans, Firestore, persistent profiles, token revocation checks, background refresh for long-running sessions, and production QUIC certificate provisioning and runtime validation remain outstanding. The branch must pass CI and runtime testing before merge or release.
+Firebase email/password account creation, email verification, password reset, pre-connection refresh-token renewal, client sign-in, reliable token transport, server-side token lookup, pre-authentication gameplay gating, and server-derived administrator identity are implemented in this working branch. The basic admin dashboard is implemented; advanced moderation, audit logs, persistent bans, Firestore, persistent profiles, token revocation checks, background refresh for long-running sessions, and production QUIC certificate provisioning and runtime validation remain outstanding. The branch must pass CI and runtime testing before merge or release.
