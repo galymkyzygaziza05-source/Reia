@@ -25,3 +25,5 @@ func process(_entities: Array[Entity], _components: Array, _delta: float) -> voi
 				UIEventBus.admin.announcement_received.emit(String(response.get("message", "")))
 			"error":
 				UIEventBus.admin.error_received.emit(String(response.get("message", "Administrator request failed.")))
+			"success":
+				UIEventBus.admin.success_received.emit(String(response.get("message", "Administrator command completed.")))
