@@ -40,7 +40,7 @@ func _send_status(client_id: int) -> void:
 	var players: Array[Dictionary] = []
 	for player_id: int in EntityMap.server._net_id_to_entity.keys():
 		var player := EntityMap.server.get_entity(player_id)
-		if not player:
+		if not player or not player.get_component(C_PlayerTag):
 			continue
 		var username_comp := player.get_component(C_Username) as C_Username
 		players.append({
